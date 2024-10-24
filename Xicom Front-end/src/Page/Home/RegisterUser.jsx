@@ -2,83 +2,17 @@ import React, { useState } from "react";
 import { LuUpload } from "react-icons/lu";
 import { IoMdAdd } from "react-icons/io";
 import { CiCircleRemove } from "react-icons/ci";
-import * as Yup from "yup";
+import { registerSchema } from "../../validations";
 
 const RegisterUser = () => {
   const [isSameAddress, setIsSameAddress] = useState(false);
-  const registerSchema = Yup.object().shape({
-    firstName: Yup.string()
-      .required("First name is required")
-      .min(2, "First name must be at least 2 characters")
-      .max(50, "First name cannot be more than 50 characters"),
-    lastName: Yup.string()
-      .required("Last name is required")
-      .min(2, "Last name must be at least 2 characters")
-      .max(50, "Last name cannot be more than 50 characters"),
-    email: Yup.string()
-      .email("Invalid email address")
-      .required("Email is required"),
-    dob: Yup.date()
-      .required("Date of birth is required")
-      .test(
-        "is-18-years-old",
-        "You must be at least 18 years old",
-        function (value) {
-          const today = new Date();
-          const birthDate = new Date(value);
-          const age = today.getFullYear() - birthDate.getFullYear();
-          const monthDiff = today.getMonth() - birthDate.getMonth();
-          if (
-            monthDiff < 0 ||
-            (monthDiff === 0 && today.getDate() < birthDate.getDate())
-          ) {
-            return age > 18;
-          }
-          return age >= 18;
-        }
-      ),
-
-    residentialAddress: Yup.object().shape({
-      street1: Yup.string()
-        .required("Residential address street 1 is required")
-        .min(2, "Street must be at least 2 characters")
-        .max(50, "Street cannot be more than 50 characters"),
-      street2: Yup.string()
-        .min(2, "Street must be at least 2 characters")
-        .max(50, "Street cannot be more than 50 characters"),
-    }),
-    permanentAddress: Yup.object().shape({
-      street1: Yup.string()
-        .required("Permanent address street 1 is required")
-        .min(2, "Street must be at least 2 characters")
-        .max(50, "Street cannot be more than 50 characters"),
-      street2: Yup.string()
-        .min(2, "Street must be at least 2 characters")
-        .max(50, "Street cannot be more than 50 characters"),
-    }),
-    documents: Yup.array().of(
-      Yup.object().shape({
-        fileName: Yup.string()
-          .required("File name is required")
-          .min(2, "File name must be at least 2 characters")
-          .max(50, "File name cannot be more than 50 characters"),
-        fileType: Yup.string()
-          .required("File type is required")
-          .min(2, "File type must be at least 2 characters")
-          .max(50, "File type cannot be more than 50 characters"),
-        file: Yup.string()
-          .required("File is required")
-          .min(2, "File must be at least 2 characters")
-          .max(50, "File cannot be more than 50 characters"),
-      })
-    ),
-  });
+  const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
-    dob: "",
+    dob: null,
     residentialAddress: {
       street1: "",
       street2: "",
@@ -92,6 +26,12 @@ const RegisterUser = () => {
 
   const handleCheckboxChange = () => {
     setIsSameAddress(!isSameAddress);
+    if (isSameAddress === true) {
+      formData.permanentAddress = {
+        street1: "",
+        street2: "",
+      };
+    }
   };
 
   const handleInputChange = (e) => {
@@ -144,6 +84,11 @@ const RegisterUser = () => {
       await registerSchema.validate(formData, { abortEarly: false });
       console.log("Validation Successful", formData);
     } catch (err) {
+      const validationErrors = {};
+      err.inner.forEach((error) => {
+        validationErrors[error.path] = error.message;
+      });
+      setErrors(validationErrors);
       console.error("Validation Errors", err.errors);
     }
   };
@@ -168,6 +113,9 @@ const RegisterUser = () => {
               placeholder="Enter your first name here.."
               className="border border-gray-300 p-2 rounded-md"
             />
+            {errors.firstName && (
+              <p className="text-red-600 text-sm">{errors.firstName}</p>
+            )}
           </div>
 
           {/* Last Name */}
@@ -183,6 +131,9 @@ const RegisterUser = () => {
               placeholder="Enter your last name here.."
               className="border border-gray-300 p-2 rounded-md"
             />
+            {errors.lastName && (
+              <p className="text-red-600 text-sm">{errors.lastName}</p>
+            )}
           </div>
 
           {/* Email */}
@@ -198,6 +149,9 @@ const RegisterUser = () => {
               placeholder="ex: myname@example.com"
               className="border border-gray-300 p-2 rounded-md"
             />
+            {errors.email && (
+              <p className="text-red-600 text-sm">{errors.email}</p>
+            )}
           </div>
 
           {/* Date of Birth */}
@@ -213,6 +167,7 @@ const RegisterUser = () => {
               className="border border-gray-300 p-2 rounded-md"
             />
             <small className="text-gray-500">Min. age should be 18 years</small>
+            {errors.dob && <p className="text-red-600 text-sm">{errors.dob}</p>}
           </div>
         </div>
 
@@ -236,6 +191,12 @@ const RegisterUser = () => {
                 }
                 className="border border-gray-300 p-2 rounded-md w-full"
               />
+
+              {errors["residentialAddress.street1"] && (
+                <p className="text-red-600 text-sm">
+                  {errors["residentialAddress.street1"]}
+                </p>
+              )}
             </div>
 
             <div>
@@ -254,6 +215,11 @@ const RegisterUser = () => {
                 }
                 className="border border-gray-300 p-2 rounded-md w-full"
               />
+              {errors["residentialAddress.street2"] && (
+                <p className="text-red-600 text-sm">
+                  {errors["residentialAddress.street2"]}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -291,6 +257,11 @@ const RegisterUser = () => {
                   }
                   className="border border-gray-300 p-2 rounded-md w-full"
                 />
+                {errors["permanentAddress.street1"] && (
+                  <p className="text-red-600 text-sm">
+                    {errors["permanentAddress.street1"]}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -309,6 +280,11 @@ const RegisterUser = () => {
                   }
                   className="border border-gray-300 p-2 rounded-md w-full"
                 />
+                {errors["permanentAddress.street2"] && (
+                  <p className="text-red-600 text-sm">
+                    {errors["permanentAddress.street2"]}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -339,6 +315,12 @@ const RegisterUser = () => {
                 className="border border-gray-300 p-2 rounded-md"
                 placeholder="Enter file name"
               />
+              {errors[`documents[${index}].fileName`] && (
+                <p className="text-red-600 text-sm">
+                  {errors[`documents[${index}].fileName`]}
+                </p>
+              )}
+              {console.log(errors)}
             </div>
 
             {/* Type of File */}
@@ -362,6 +344,11 @@ const RegisterUser = () => {
                 <option value="pdf">PDF</option>
               </select>
               <small className="text-gray-500">(image, pdf.)</small>
+              {errors[`documents[${index}].fileType`] && (
+                <p className="text-red-600 text-sm">
+                  {errors[`documents[${index}].fileType`]}
+                </p>
+              )}
             </div>
 
             {/* Upload Document */}
@@ -378,9 +365,24 @@ const RegisterUser = () => {
                   }
                   className="absolute inset-0 opacity-0 z-10 cursor-pointer"
                 />
-                <div className="border border-gray-300 p-3 rounded-md w-full flex items-center">
-                  <LuUpload className="ml-auto text-gray-500" />
+                <div className="border border-gray-300 gap-3 p-3 rounded-md w-full flex items-center">
+                  <LuUpload className="ml-auto text-gray-500 h-4 w-4" />
+                  <div className="truncate">
+                    {formData?.documents[0]?.file?.name &&
+                      formData?.documents[0]?.file?.name
+                        .split(" ")
+                        .slice(0, 4)
+                        .join(" ") +
+                        (formData?.documents[0]?.file?.name?.split(" ")?.length > 5
+                          ? "..."
+                          : "")}
+                  </div>
                 </div>
+                {errors[`documents[${index}].file`] && (
+                  <p className="text-red-600 text-sm">
+                    {errors[`documents[${index}].file`]}
+                  </p>
+                )}
               </div>
             </div>
 
