@@ -2,9 +2,13 @@ import * as Yup from "yup";
 
 export const registerSchema = Yup.object().shape({
   firstName: Yup.string()
-    .required("First name is required"),
+    .required("First name is required")
+    .min(3, "lastName must be at least 3 characters")
+    .max(20, "lastName cannot be more than 20 characters"),
   lastName: Yup.string()
-    .required("Last name is required"),
+    .required("Last name is required")
+    .min(3, "lastName must be at least 3 characters")
+    .max(20, "lastName cannot be more than 20 characters"),
   email: Yup.string()
     .email("Invalid email address")
     .required("Email is required"),
@@ -31,35 +35,35 @@ export const registerSchema = Yup.object().shape({
   residentialAddress: Yup.object().shape({
     street1: Yup.string()
       .required("Residential address street 1 is required")
-      .min(2, "Street must be at least 2 characters")
-      .max(50, "Street cannot be more than 50 characters"),
+      .min(3, "Street must be at least 2 characters")
+      .max(10, "Street cannot be more than 10 characters"),
     street2: Yup.string()
-      .min(2, "Street must be at least 2 characters")
-      .max(50, "Street cannot be more than 50 characters"),
+      .min(3, "Street must be at least 3 characters")
+      .max(20, "Street cannot be more than 20 characters"),
   }),
   permanentAddress: Yup.object().shape({
     street1: Yup.string()
       .required("Permanent address street 1 is required")
-      .min(2, "Street must be at least 2 characters")
-      .max(50, "Street cannot be more than 50 characters"),
+      .min(3, "Street must be at least 3 characters")
+      .max(20, "Street cannot be more than 20 characters"),
     street2: Yup.string()
-      .min(2, "Street must be at least 2 characters")
-      .max(50, "Street cannot be more than 50 characters"),
+      .min(3, "Street must be at least 3 characters")
+      .max(20, "Street cannot be more than 20 characters"),
   }),
   documents: Yup.array().of(
     Yup.object().shape({
       fileName: Yup.string()
         .required("File name is required")
-        .min(2, "File name must be at least 2 characters")
-        .max(50, "File name cannot be more than 50 characters"),
+        .min(3, "File name must be at least 3 characters")
+        .max(20, "File name cannot be more than 20 characters"),
       fileType: Yup.string()
         .required("File type is required")
-        .min(2, "File type must be at least 2 characters")
-        .max(50, "File type cannot be more than 50 characters"),
+        .min(3, "File type must be at least 3 characters")
+        .max(20, "File type cannot be more than 20 characters"),
       file: Yup.string()
         .required("File is required")
-        .min(2, "File must be at least 2 characters")
-        .max(50, "File cannot be more than 50 characters"),
+        .min(3, "File must be at least 3 characters")
+        .max(20, "File cannot be more than 20 characters"),
     })
   ),
 });
