@@ -1,100 +1,116 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import DocumentUpload from '../../Components/DocumentUpload';
 
 const RegisterUser = () => {
-  const [formData, setFormData] = useState({
-    fullName: '',
-    dateOfBirth: '',
-    residentialAddress: '',
-    permanentAddress: '',
-    sameAsResidential: false,
-    documents: []
-  });
+  const [isSameAddress, setIsSameAddress] = useState(false);
 
-  const [errors, setErrors] = useState({});
-  
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value
-    });
-  };
-
-  const handleDocumentChange = (newDocuments) => {
-    setFormData({ ...formData, documents: newDocuments });
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.fullName) newErrors.fullName = 'Full Name is required';
-    if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of Birth is required';
-
-    if (!formData.documents || formData.documents.length < 2) {
-      newErrors.documents = 'At least two documents are required';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      try {
-        const response = await axios.post('http://localhost:5000/api/submit', formData);
-        console.log(response.data);
-        alert('Form submitted successfully!');
-      } catch (error) {
-        console.error('Error submitting form', error);
-      }
-    }
+  const handleCheckboxChange = () => {
+    setIsSameAddress(!isSameAddress);
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label>Full Name</label>
-        <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} />
-        {errors.fullName && <p>{errors.fullName}</p>}
-      </div>
-
-      <div>
-        <label>Date of Birth</label>
-        <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} />
-        {errors.dateOfBirth && <p>{errors.dateOfBirth}</p>}
-      </div>
-
-      <div>
-        <label>Residential Address</label>
-        <input type="text" name="residentialAddress" value={formData.residentialAddress} onChange={handleChange} />
-      </div>
-
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            name="sameAsResidential"
-            checked={formData.sameAsResidential}
-            onChange={handleChange}
-          />
-          Same as Residential Address
+    <form className="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-md">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* First Name */}
+      <div className="flex flex-col">
+        <label htmlFor="firstName" className="font-semibold mb-1">
+          First Name<span className="text-red-600">*</span>
         </label>
+        <input
+          type="text"
+          id="firstName"
+          placeholder="Enter your first name here.."
+          className="border border-gray-300 p-2 rounded-md"
+        />
       </div>
 
-      {!formData.sameAsResidential && (
-        <div>
-          <label>Permanent Address</label>
-          <input type="text" name="permanentAddress" value={formData.permanentAddress} onChange={handleChange} />
+      {/* Last Name */}
+      <div className="flex flex-col">
+        <label htmlFor="lastName" className="font-semibold mb-1">
+          Last Name<span className="text-red-600">*</span>
+        </label>
+        <input
+          type="text"
+          id="lastName"
+          placeholder="Enter your last name here.."
+          className="border border-gray-300 p-2 rounded-md"
+        />
+      </div>
+
+      {/* Email */}
+      <div className="flex flex-col">
+        <label htmlFor="email" className="font-semibold mb-1">
+          E-mail<span className="text-red-600">*</span>
+        </label>
+        <input
+          type="email"
+          id="email"
+          placeholder="ex: myname@example.com"
+          className="border border-gray-300 p-2 rounded-md"
+        />
+      </div>
+
+      {/* Date of Birth */}
+      <div className="flex flex-col">
+        <label htmlFor="dob" className="font-semibold mb-1">
+          Date of Birth<span className="text-red-600">*</span>
+        </label>
+        <input
+          type="date"
+          id="dob"
+          className="border border-gray-300 p-2 rounded-md"
+        />
+        <small className="text-gray-500">Min. age should be 18 years</small>
+      </div>
+    </div>
+
+    {/* Residential Address */}
+    <div className="mt-6">
+      <h3 className="font-semibold mb-2">Residential Address</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <input
+          type="text"
+          placeholder="Street 1*"
+          className="border border-gray-300 p-2 rounded-md"
+        />
+        <input
+          type="text"
+          placeholder="Street 2*"
+          className="border border-gray-300 p-2 rounded-md"
+        />
+      </div>
+    </div>
+
+    {/* Same as Residential Address Checkbox */}
+    <div className="flex items-center mt-4">
+      <input
+        type="checkbox"
+        id="sameAddress"
+        checked={isSameAddress}
+        onChange={handleCheckboxChange}
+        className="mr-2"
+      />
+      <label htmlFor="sameAddress">Same as Residential Address</label>
+    </div>
+
+    {/* Permanent Address */}
+    {!isSameAddress && (
+      <div className="mt-6">
+        <h3 className="font-semibold mb-2">Permanent Address</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <input
+            type="text"
+            placeholder="Street 1*"
+            className="border border-gray-300 p-2 rounded-md"
+          />
+          <input
+            type="text"
+            placeholder="Street 2*"
+            className="border border-gray-300 p-2 rounded-md"
+          />
         </div>
-      )}
-
-      <DocumentUpload documents={formData.documents} onDocumentChange={handleDocumentChange} />
-
-      {errors.documents && <p>{errors.documents}</p>}
-
-      <button type="submit">Submit</button>
-    </form>
+      </div>
+    )}
+  </form>
   );
 }
 
