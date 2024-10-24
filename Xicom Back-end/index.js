@@ -4,7 +4,6 @@ import cors from "cors";
 import dotenv from 'dotenv'
 import { connectToMongoDB } from './config.js';
 import router from './routes/AuthRoutes.js';
-import ProductRouter from './routes/ProductRoutes.js';
 
 dotenv.config()
 const app = express()
@@ -16,12 +15,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 connectToMongoDB();
 
 app.get('/', (req, res) => {
-    res.status(200).send({ message: "Welcome to vega6 tech Group API's" });
+    res.status(200).send({ message: "Welcome to Xicom tech API's" });
 });
 
 app.listen(process.env.PORT, () => {
-    console.log(`E-commerce backend listening at http://localhost:${process.env.PORT}`)
+    console.log(`Register user details listening at http://localhost:${process.env.PORT}`)
 })
 
 app.use('/auth', router);
-app.use('/product', ProductRouter);
