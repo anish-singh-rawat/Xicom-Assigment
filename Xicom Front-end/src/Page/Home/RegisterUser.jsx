@@ -1,33 +1,151 @@
 import React, { useState } from "react";
 import { LuUpload } from "react-icons/lu";
+import { IoMdAdd } from "react-icons/io";
+import { CiCircleRemove } from "react-icons/ci";
+import * as Yup from "yup";
 
 const RegisterUser = () => {
   const [isSameAddress, setIsSameAddress] = useState(false);
+  const registerSchema = Yup.object().shape({
+    firstName: Yup.string()
+      .required("First name is required")
+      .min(2, "First name must be at least 2 characters")
+      .max(50, "First name cannot be more than 50 characters"),
+    lastName: Yup.string()
+      .required("Last name is required")
+      .min(2, "Last name must be at least 2 characters")
+      .max(50, "Last name cannot be more than 50 characters"),
+    email: Yup.string()
+      .email("Invalid email address")
+      .required("Email is required"),
+    dob: Yup.date()
+      .required("Date of birth is required")
+      .test(
+        "is-18-years-old",
+        "You must be at least 18 years old",
+        function (value) {
+          const today = new Date();
+          const birthDate = new Date(value);
+          const age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          if (
+            monthDiff < 0 ||
+            (monthDiff === 0 && today.getDate() < birthDate.getDate())
+          ) {
+            return age > 18;
+          }
+          return age >= 18;
+        }
+      ),
+
+    residentialAddress: Yup.object().shape({
+      street1: Yup.string()
+        .required("Residential address street 1 is required")
+        .min(2, "Street must be at least 2 characters")
+        .max(50, "Street cannot be more than 50 characters"),
+      street2: Yup.string()
+        .min(2, "Street must be at least 2 characters")
+        .max(50, "Street cannot be more than 50 characters"),
+    }),
+    permanentAddress: Yup.object().shape({
+      street1: Yup.string()
+        .required("Permanent address street 1 is required")
+        .min(2, "Street must be at least 2 characters")
+        .max(50, "Street cannot be more than 50 characters"),
+      street2: Yup.string()
+        .min(2, "Street must be at least 2 characters")
+        .max(50, "Street cannot be more than 50 characters"),
+    }),
+    documents: Yup.array().of(
+      Yup.object().shape({
+        fileName: Yup.string()
+          .required("File name is required")
+          .min(2, "File name must be at least 2 characters")
+          .max(50, "File name cannot be more than 50 characters"),
+        fileType: Yup.string()
+          .required("File type is required")
+          .min(2, "File type must be at least 2 characters")
+          .max(50, "File type cannot be more than 50 characters"),
+        file: Yup.string()
+          .required("File is required")
+          .min(2, "File must be at least 2 characters")
+          .max(50, "File cannot be more than 50 characters"),
+      })
+    ),
+  });
+
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    dob: "",
+    residentialAddress: {
+      street1: "",
+      street2: "",
+    },
+    permanentAddress: {
+      street1: "",
+      street2: "",
+    },
+    documents: [{ id: Date.now(), fileName: "", fileType: "", file: null }],
+  });
 
   const handleCheckboxChange = () => {
     setIsSameAddress(!isSameAddress);
   };
 
-  const [documents, setDocuments] = useState([
-    { id: Date.now(), fileName: "", fileType: "", file: null },
-  ]);
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData({ ...formData, [id]: value });
+  };
+
+  const handleAddressChange = (e, type, field) => {
+    setFormData({
+      ...formData,
+      [type]: {
+        ...formData[type],
+        [field]: e.target.value,
+      },
+    });
+  };
+
+  const handleDocumentChange = (id, field, value) => {
+    const updatedDocs = formData.documents.map((doc) =>
+      doc.id === id ? { ...doc, [field]: value } : doc
+    );
+    setFormData({ ...formData, documents: updatedDocs });
+  };
 
   const handleAddDocument = () => {
-    setDocuments([
-      ...documents,
-      { id: Date.now(), fileName: "", fileType: "", file: null },
-    ]);
+    setFormData({
+      ...formData,
+      documents: [
+        ...formData.documents,
+        { id: Date.now(), fileName: "", fileType: "", file: null },
+      ],
+    });
   };
 
   const handleRemoveDocument = (id) => {
-    setDocuments(documents.filter((doc) => doc.id !== id));
+    setFormData({
+      ...formData,
+      documents: formData.documents.filter((doc) => doc.id !== id),
+    });
   };
 
-  const handleInputChange = (id, field, value) => {
-    const updatedDocs = documents.map((doc) =>
-      doc.id === id ? { ...doc, [field]: value } : doc
-    );
-    setDocuments(updatedDocs);
+  const handleSubmit = async () => {
+    if (isSameAddress === true) {
+      formData.permanentAddress = {
+        street1: formData.residentialAddress.street1,
+        street2: formData.residentialAddress.street2,
+      };
+    }
+    try {
+      await registerSchema.validate(formData, { abortEarly: false });
+      console.log("Validation Successful", formData);
+    } catch (err) {
+      console.error("Validation Errors", err.errors);
+    }
   };
 
   return (
@@ -45,6 +163,8 @@ const RegisterUser = () => {
             <input
               type="text"
               id="firstName"
+              value={formData.firstName}
+              onChange={handleInputChange}
               placeholder="Enter your first name here.."
               className="border border-gray-300 p-2 rounded-md"
             />
@@ -58,6 +178,8 @@ const RegisterUser = () => {
             <input
               type="text"
               id="lastName"
+              value={formData.lastName}
+              onChange={handleInputChange}
               placeholder="Enter your last name here.."
               className="border border-gray-300 p-2 rounded-md"
             />
@@ -71,6 +193,8 @@ const RegisterUser = () => {
             <input
               type="email"
               id="email"
+              value={formData.email}
+              onChange={handleInputChange}
               placeholder="ex: myname@example.com"
               className="border border-gray-300 p-2 rounded-md"
             />
@@ -84,6 +208,8 @@ const RegisterUser = () => {
             <input
               type="date"
               id="dob"
+              value={formData.dob}
+              onChange={handleInputChange}
               className="border border-gray-300 p-2 rounded-md"
             />
             <small className="text-gray-500">Min. age should be 18 years</small>
@@ -96,28 +222,36 @@ const RegisterUser = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label
-                htmlFor="street1"
+                htmlFor="resStreet1"
                 className="block text-sm font-medium text-gray-700"
               >
                 Street 1 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                id="street1"
+                id="resStreet1"
+                value={formData.residentialAddress.street1}
+                onChange={(e) =>
+                  handleAddressChange(e, "residentialAddress", "street1")
+                }
                 className="border border-gray-300 p-2 rounded-md w-full"
               />
             </div>
 
             <div>
               <label
-                htmlFor="street2"
+                htmlFor="resStreet2"
                 className="block text-sm font-medium text-gray-700"
               >
                 Street 2 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                id="street2"
+                id="resStreet2"
+                value={formData.residentialAddress.street2}
+                onChange={(e) =>
+                  handleAddressChange(e, "residentialAddress", "street2")
+                }
                 className="border border-gray-300 p-2 rounded-md w-full"
               />
             </div>
@@ -143,28 +277,36 @@ const RegisterUser = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label
-                  htmlFor="street1"
+                  htmlFor="permStreet1"
                   className="block text-sm font-medium text-gray-700"
                 >
                   Street 1 <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="street1"
+                  id="permStreet1"
+                  value={formData.permanentAddress.street1}
+                  onChange={(e) =>
+                    handleAddressChange(e, "permanentAddress", "street1")
+                  }
                   className="border border-gray-300 p-2 rounded-md w-full"
                 />
               </div>
 
               <div>
                 <label
-                  htmlFor="street2"
+                  htmlFor="permStreet2"
                   className="block text-sm font-medium text-gray-700"
                 >
                   Street 2 <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="street2"
+                  id="permStreet2"
+                  value={formData.permanentAddress.street2}
+                  onChange={(e) =>
+                    handleAddressChange(e, "permanentAddress", "street2")
+                  }
                   className="border border-gray-300 p-2 rounded-md w-full"
                 />
               </div>
@@ -174,7 +316,7 @@ const RegisterUser = () => {
 
         <h3 className="font-semibold mb-4 mt-6">Upload Documents</h3>
 
-        {documents.map((doc, index) => (
+        {formData.documents.map((doc, index) => (
           <div
             key={doc.id}
             className="mt-6 flex flex-col sm:flex-row sm:justify-between sm:gap-5 items-center"
@@ -192,7 +334,7 @@ const RegisterUser = () => {
                 id={`fileName-${doc.id}`}
                 value={doc.fileName}
                 onChange={(e) =>
-                  handleInputChange(doc.id, "fileName", e.target.value)
+                  handleDocumentChange(doc.id, "fileName", e.target.value)
                 }
                 className="border border-gray-300 p-2 rounded-md"
                 placeholder="Enter file name"
@@ -211,7 +353,7 @@ const RegisterUser = () => {
                 id={`fileType-${doc.id}`}
                 value={doc.fileType}
                 onChange={(e) =>
-                  handleInputChange(doc.id, "fileType", e.target.value)
+                  handleDocumentChange(doc.id, "fileType", e.target.value)
                 }
                 className="border border-gray-300 p-2 rounded-md"
               >
@@ -232,7 +374,7 @@ const RegisterUser = () => {
                   type="file"
                   id={`file-${doc.id}`}
                   onChange={(e) =>
-                    handleInputChange(doc.id, "file", e.target.files[0])
+                    handleDocumentChange(doc.id, "file", e.target.files[0])
                   }
                   className="absolute inset-0 opacity-0 z-10 cursor-pointer"
                 />
@@ -244,26 +386,13 @@ const RegisterUser = () => {
 
             {/* Add/Remove Button */}
             <div className="flex justify-center mt-4">
-              {index === documents.length - 1 ? (
+              {index === formData.documents.length - 1 ? (
                 <button
                   type="button"
                   onClick={handleAddDocument}
                   className="bg-gray-200 p-2 rounded-md"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
+                  <IoMdAdd />
                 </button>
               ) : (
                 <button
@@ -271,20 +400,7 @@ const RegisterUser = () => {
                   onClick={() => handleRemoveDocument(doc.id)}
                   className="bg-red-200 p-2 rounded-md"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <CiCircleRemove />
                 </button>
               )}
             </div>
@@ -294,6 +410,7 @@ const RegisterUser = () => {
         <div className="flex items-center justify-center mt-6">
           <button
             type="button"
+            onClick={handleSubmit}
             className="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none font-medium rounded-lg w-32 h-10"
           >
             Submit
