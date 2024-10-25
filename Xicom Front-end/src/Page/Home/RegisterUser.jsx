@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { LuUpload } from "react-icons/lu";
 import { IoMdAdd } from "react-icons/io";
 import { CiCircleRemove } from "react-icons/ci";
-import { registerSchema } from "../../validations";
-import axiosInstance from "../../../utils/axios";
 import axios from "axios";
 
 const RegisterUser = () => {
@@ -83,7 +81,31 @@ const RegisterUser = () => {
       };
     }
     try {
-      await registerSchema.validate(formData, { abortEarly: false });
+      // await registerSchema.validate(formData, { abortEarly: false });
+      formData.documents.map(async (data) => {
+        if (data.fileType === "image") {
+          const ImageData = new FormData();
+          ImageData.append('file', data.file);
+          const res = await axios.post("http://localhost:5000/auth/registerUserImage", ImageData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+        }
+        else if (data.fileType === "pdf"){
+          const PDFData = new FormData();
+          PDFData.append('file', data.file);
+          const res = await axios.post("http://localhost:5000/auth/registerPDF", PDFData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });          
+        } 
+        else {
+          console.log(data.fileType)
+        }
+      });
+
       let payload = {
         firstName : formData.firstName,
         lastName : formData.lastName,
