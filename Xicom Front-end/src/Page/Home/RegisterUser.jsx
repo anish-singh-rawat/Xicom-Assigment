@@ -5,9 +5,8 @@ import { CiCircleRemove } from "react-icons/ci";
 import axios from "axios";
 import { registerSchema } from "../../validations";
 import CircularProgress from "@mui/material/CircularProgress";
-import Alert from "@mui/material/Alert";
-import Stack from "@mui/material/Stack";
 import { toast } from "react-toastify";
+import axiosInstance from "../../../utils/axios";
 
 const RegisterUser = () => {
   const [isSameAddress, setIsSameAddress] = useState(false);
@@ -96,12 +95,10 @@ const RegisterUser = () => {
           if (fileType === "image" || fileType === "pdf") {
             const formDataObj = new FormData();
             formDataObj.append("file", doc.file);
-            const endpoint =
-              fileType === "image"
-                ? "http://localhost:5000/auth/registerUserImage"
-                : "http://localhost:5000/auth/registerPDF";
+            const endpoint = 
+            fileType === "image" ? "/auth/registerUserImage" : "/auth/registerPDF"
 
-            const res = await axios.post(endpoint, formDataObj, {
+            const res = await axiosInstance.post(endpoint, formDataObj, {
               headers: {
                 "Content-Type": "multipart/form-data",
               },
@@ -114,7 +111,6 @@ const RegisterUser = () => {
               filePath: res.data.filePath,
             };
           }
-
           return doc;
         })
       );
@@ -130,13 +126,10 @@ const RegisterUser = () => {
         isSameAsResidential: isSameAddress,
       };
 
-      const {data, status} = await axios.post(
-        "http://localhost:5000/auth/register",
-        payload
-      );
-      console.log("response", data.message);
+      const {data, status} = await axios.post("http://localhost:5000/auth/register",payload);
+      console.log("response", data?.message);
       if (status == 200) {
-        toast.success(data.message);
+        toast.success(data?.message);
       }
     } catch (err) {
       const validationErrors = {};
@@ -144,8 +137,8 @@ const RegisterUser = () => {
         validationErrors[error?.path] = error?.message;
       });
       setErrors(validationErrors);
-      console.error("Validation Errors", err.response);
-      toast.error(err.response.data.message);
+      console.error("Validation Errors", err);
+      toast.error(err.response?.data?.message);
     } finally {
       setIsLoading(false);
     }
@@ -426,15 +419,7 @@ const RegisterUser = () => {
                 <div className="border border-gray-300 gap-3 p-3 rounded-md w-full flex items-center">
                   <LuUpload className="ml-auto text-gray-500 h-4 w-4" />
                   <div className="truncate">
-                    {formData?.documents[0]?.file?.name &&
-                      formData?.documents[0]?.file?.name
-                        .split(" ")
-                        .slice(0, 4)
-                        .join(" ") +
-                        (formData?.documents[0]?.file?.name?.split(" ")
-                          ?.length > 5
-                          ? "..."
-                          : "")}
+                    {doc.file?.name ? formData?.documents[0]?.file?.name : null}
                   </div>
                 </div>
                 {errors[`documents[${index}].file`] && (
@@ -447,7 +432,7 @@ const RegisterUser = () => {
 
             {/* Add/Remove Button */}
             <div className="flex justify-center mt-4">
-              {index === formData.documents.length - 1 ? (
+              {index === 0 ? (
                 <button
                   type="button"
                   onClick={handleAddDocument}
