@@ -104,6 +104,8 @@ const RegisterUser = () => {
               },
             });
 
+            console.log("file respose : ",res)
+
             return {
               id: doc.id,
               fileName,
@@ -139,6 +141,7 @@ const RegisterUser = () => {
       setErrors(validationErrors);
       console.error("Validation Errors", err);
       toast.error(err.response?.data?.message);
+      toast.error(err.response?.data?.error);
     } finally {
       setIsLoading(false);
     }
