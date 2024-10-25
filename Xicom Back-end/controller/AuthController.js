@@ -26,7 +26,18 @@ const fileFilter = (req, file, cb) => {
   if (file.mimetype === "application/pdf") {
     cb(null, true);
   } else {
-    cb(new Error("Only PDF files are allowed!"), false);
+    cb(new Error("thise is not PDF, please upload PDF!"), false);
+  }
+};
+
+const imgFilter = (req, file, cb) => {
+  const allowedTypes = /jpeg|jpg|png|gif/;
+  const isImage = allowedTypes.test(file.mimetype) && allowedTypes.test(file.originalname.split('.').pop());
+  
+  if (isImage) {
+    cb(null, true);
+  } else {
+    cb(new Error("this is not image, plase upload image!"), false);
   }
 };
 
@@ -38,6 +49,7 @@ const uploadPDF = multer({
 
 const uploadImg = multer({
   storage: storageImg,
+  fileFilter: imgFilter,
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
