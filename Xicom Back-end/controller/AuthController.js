@@ -92,13 +92,11 @@ export const registerUser = async (req, res) => {
       documents,
     } = req.body;
 
-    if (isSameAsResidential == false) {
+    if (isSameAsResidential === false) {
       if (!permanentAddress.street1 || !permanentAddress.street2) {
-        return res
-          .status(200)
-          .json({
-            message: "Please provide all required data of parmanent address",
-          });
+        return res.status(400).json({
+          message: "Please provide all required data of permanent address",
+        });
       }
     }
 
@@ -108,49 +106,56 @@ export const registerUser = async (req, res) => {
       !dob ||
       !email ||
       !residentialAddress.street1 ||
-      !residentialAddress.street1 ||
-      !documents.fileType ||
-      !documents.fileName
+      !documents ||
+      documents.length === 0
     ) {
       return res
-        .status(200)
+        .status(400)
         .json({ message: "Please provide all required fields" });
     }
 
-    if (req.body.documents.fileType === "image") {
-      uploadImg.single("file")(req, res, (err) => {
-        if (err) {
-          return res.status(500).send({
-            message: "Error uploading file",
-            error: err.message || "Unknown error occurred",
-          });
-        }
+    // for (const doc of documents) {
+    //   console.log(doc.fileType);
+    //   if (!doc.fileType || !doc.fileName) {
+    //     return res.status(400).json({
+    //       message: "Please provide fileName and fileType for all documents",
+    //     });
+    //   }
 
-        return res.status(200).send({
-          message: "PDF file uploaded successfully",
-        });
-      });
-    } else if (req.body.documents.fileType === "pdf") {
-      uploadPDF.single("file")(req, res, (err) => {
-        if (err) {
-          return res.status(500).send({
-            message: "Error uploading file",
-            error: err.message || "Unknown error occurred",
-          });
-        }
-
-        return res.status(200).send({
-          message: "PDF file uploaded successfully",
-        });
-      });
-    } else {
-      return res.status(200).json({ message: "Invalid file type" });
-    }
+    //   if (doc.fileType === "image") {
+    //     await new Promise((resolve, reject) => {
+    //       uploadImg.single("file")(req, res, (err) => {
+    //         if (err) {
+    //           return reject({
+    //             message: "Error uploading image file",
+    //             error: err.message || "Unknown error occurred",
+    //           });
+    //         }
+    //         resolve();
+    //       });
+    //     });
+    //   } else if (doc.fileType === "pdf") {
+    //     await new Promise((resolve, reject) => {
+    //       uploadPDF.single("file")(req, res, (err) => {
+    //         if (err) {
+    //           return reject({
+    //             message: "Error uploading PDF file",
+    //             error: err.message || "Unknown error occurred",
+    //           });
+    //         }
+    //         resolve();
+    //       });
+    //     });
+    //   } else {
+    //     return res.status(400).json({ message: "Invalid file type" });
+    //   }
+    // }
 
     const existUser = await UserModel.findOne({ email });
     if (existUser) {
-      return res.status(200).json({ message: "User already exists" });
+      return res.status(400).json({ message: "User already exists" });
     }
+    console.log(req.body);
 
     const newUser = new UserModel({
       firstName,
@@ -159,15 +164,13 @@ export const registerUser = async (req, res) => {
       email,
       residentialAddress,
       permanentAddress,
-      documents: {
-        file: `${process.env.API_URL}/${req.file.path}`,
-        fileName: req.file.filename,
-        fileType: req.body.documents.fileType,
-      },
+      documents: documents.map((doc, index) => ({
+        file: `${index}`,
+        fileName: doc.fileName,
+        fileType: doc.fileType,
+      })),
     });
-
     await newUser.save();
-
     return res.status(200).json({
       message: "User registered successfully",
       user: newUser,
