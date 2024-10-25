@@ -44,10 +44,10 @@ const UserSchema = mongoose.Schema({
         type: String,
         required: true,
       },
-      // fileType: {
-      //   type: String,
-      //   required: true,
-      // },
+      fileType: {
+        type: String,
+        required: true,
+      },
       file: {
         type: String,
         required: true,
