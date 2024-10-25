@@ -135,6 +135,7 @@ export const registerUser = async (req, res) => {
         filePath: doc.filePath,
         fileName: doc.fileName,
         fileType: doc.fileType,
+        id : doc.id,
       })),
     });
     await newUser.save();
