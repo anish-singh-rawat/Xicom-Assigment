@@ -3,6 +3,7 @@ import { LuUpload } from "react-icons/lu";
 import { IoMdAdd } from "react-icons/io";
 import { CiCircleRemove } from "react-icons/ci";
 import { registerSchema } from "../../validations";
+import axiosInstance from "../../../utils/axios";
 
 const RegisterUser = () => {
   const [isSameAddress, setIsSameAddress] = useState(false);
@@ -82,7 +83,28 @@ const RegisterUser = () => {
     }
     try {
       await registerSchema.validate(formData, { abortEarly: false });
-      console.log("Validation Successful", formData);
+      let payload = {
+        firstName : formData.firstName,
+        lastName : formData.lastName,
+        dob : formData.dob,
+        email : formData.email,
+        residentialAddress : {
+          street1 : formData.residentialAddress.street1,
+          street2 : formData.residentialAddress.street2,
+        },
+        permanentAddress : {
+          street1 : formData.permanentAddress.street1,
+          street2 : formData.permanentAddress.street2,
+        },
+        documents: formData.documents.map((document) => ({
+          fileName: document.fileName,
+          fileType: document.fileType,
+          file: document.file,
+        })),
+        isSameAsResidential : isSameAddress,
+      };
+      const response = await axiosInstance.post("/auth/register",payload)
+      console.log("Validation Successful", response);
     } catch (err) {
       const validationErrors = {};
       err.inner.forEach((error) => {

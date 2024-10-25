@@ -36,7 +36,7 @@ export const registerSchema = Yup.object().shape({
     street1: Yup.string()
       .required("Residential address street 1 is required")
       .min(3, "Street must be at least 2 characters")
-      .max(10, "Street cannot be more than 10 characters"),
+      .max(20, "Street cannot be more than 20 characters"),
     street2: Yup.string()
       .min(3, "Street must be at least 3 characters")
       .max(20, "Street cannot be more than 20 characters"),
@@ -57,9 +57,7 @@ export const registerSchema = Yup.object().shape({
         .min(3, "File name must be at least 3 characters")
         .max(20, "File name cannot be more than 20 characters"),
       fileType: Yup.string()
-        .required("File type is required")
-        .min(3, "File type must be at least 3 characters")
-        .max(20, "File type cannot be more than 20 characters"),
+        .required("File type is required"),
       file: Yup.string()
         .required("File is required")
         .min(3, "File must be at least 3 characters")
