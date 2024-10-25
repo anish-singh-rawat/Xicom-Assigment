@@ -4,6 +4,7 @@ import { IoMdAdd } from "react-icons/io";
 import { CiCircleRemove } from "react-icons/ci";
 import { registerSchema } from "../../validations";
 import axiosInstance from "../../../utils/axios";
+import axios from "axios";
 
 const RegisterUser = () => {
   const [isSameAddress, setIsSameAddress] = useState(false);
@@ -103,8 +104,9 @@ const RegisterUser = () => {
         })),
         isSameAsResidential : isSameAddress,
       };
-      const response = await axiosInstance.post("/auth/register",payload)
-      console.log("Validation Successful", response);
+      console.log("payload : ", payload);
+      const response = await axios.post("http://localhost:5000/auth/register",payload)
+      console.log("response", response);
     } catch (err) {
       const validationErrors = {};
       err.inner.forEach((error) => {
