@@ -50,8 +50,10 @@ export const registerUserPDF = async (req, res) => {
           error: err.message || "Unknown error occurred",
         });
       }
+      const filePath = `/public/pdf/${req.file.filename}`;
       return res.status(200).send({
         message: "PDF file uploaded successfully",
+        filePath: filePath,
       });
     });
   } catch (error) {
@@ -69,8 +71,10 @@ export const registerUserImage = async (req, res) => {
           error: err.message || "Unknown error occurred",
         });
       }
+      const filePath = `/public/image/${req.file.filename}`;
       return res.status(200).send({
         message: "Image uploaded successfully",
+        filePath: filePath,
       });
     });
   } catch (error) {
@@ -114,48 +118,11 @@ export const registerUser = async (req, res) => {
         .json({ message: "Please provide all required fields" });
     }
 
-    // for (const doc of documents) {
-    //   console.log(doc.fileType);
-    //   if (!doc.fileType || !doc.fileName) {
-    //     return res.status(400).json({
-    //       message: "Please provide fileName and fileType for all documents",
-    //     });
-    //   }
-
-    //   if (doc.fileType === "image") {
-    //     await new Promise((resolve, reject) => {
-    //       uploadImg.single("file")(req, res, (err) => {
-    //         if (err) {
-    //           return reject({
-    //             message: "Error uploading image file",
-    //             error: err.message || "Unknown error occurred",
-    //           });
-    //         }
-    //         resolve();
-    //       });
-    //     });
-    //   } else if (doc.fileType === "pdf") {
-    //     await new Promise((resolve, reject) => {
-    //       uploadPDF.single("file")(req, res, (err) => {
-    //         if (err) {
-    //           return reject({
-    //             message: "Error uploading PDF file",
-    //             error: err.message || "Unknown error occurred",
-    //           });
-    //         }
-    //         resolve();
-    //       });
-    //     });
-    //   } else {
-    //     return res.status(400).json({ message: "Invalid file type" });
-    //   }
-    // }
-
     const existUser = await UserModel.findOne({ email });
+    
     if (existUser) {
       return res.status(400).json({ message: "User already exists" });
     }
-    console.log(req.body);
 
     const newUser = new UserModel({
       firstName,
@@ -165,7 +132,7 @@ export const registerUser = async (req, res) => {
       residentialAddress,
       permanentAddress,
       documents: documents.map((doc, index) => ({
-        file: `${index}`,
+        filePath: doc.filePath,
         fileName: doc.fileName,
         fileType: doc.fileType,
       })),

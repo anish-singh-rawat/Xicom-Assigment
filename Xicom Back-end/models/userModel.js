@@ -48,7 +48,7 @@ const UserSchema = mongoose.Schema({
         type: String,
         required: true,
       },
-      file: {
+      filePath: {
         type: String,
         required: true,
       },
