@@ -3,10 +3,16 @@ import { LuUpload } from "react-icons/lu";
 import { IoMdAdd } from "react-icons/io";
 import { CiCircleRemove } from "react-icons/ci";
 import axios from "axios";
+import { registerSchema } from "../../validations";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
+import Stack from "@mui/material/Stack";
+import { toast } from "react-toastify";
 
 const RegisterUser = () => {
   const [isSameAddress, setIsSameAddress] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -21,7 +27,7 @@ const RegisterUser = () => {
       street1: "",
       street2: "",
     },
-    documents: [{ id: Date.now(), fileName: "", fileType: "", file: null }],
+    documents: [{ id: Date.now(), fileName: "", fileType: "" }],
   });
 
   const handleCheckboxChange = () => {
@@ -61,7 +67,7 @@ const RegisterUser = () => {
       ...formData,
       documents: [
         ...formData.documents,
-        { id: Date.now(), fileName: "", fileType: "", file: null },
+        { id: Date.now(), fileName: "", fileType: "" },
       ],
     });
   };
@@ -74,68 +80,74 @@ const RegisterUser = () => {
   };
 
   const handleSubmit = async () => {
-    if (isSameAddress === true) {
-      formData.permanentAddress = {
-        street1: formData.residentialAddress.street1,
-        street2: formData.residentialAddress.street2,
-      };
-    }
     try {
-      // await registerSchema.validate(formData, { abortEarly: false });
-      formData.documents.map(async (data) => {
-        if (data.fileType === "image") {
-          const ImageData = new FormData();
-          ImageData.append('file', data.file);
-          const res = await axios.post("http://localhost:5000/auth/registerUserImage", ImageData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
-        }
-        else if (data.fileType === "pdf"){
-          const PDFData = new FormData();
-          PDFData.append('file', data.file);
-          const res = await axios.post("http://localhost:5000/auth/registerPDF", PDFData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });          
-        } 
-        else {
-          console.log(data.fileType)
-        }
-      });
+      setIsLoading(true);
+      if (isSameAddress === true) {
+        formData.permanentAddress = {
+          street1: formData.residentialAddress.street1,
+          street2: formData.residentialAddress.street2,
+        };
+      }
+      await registerSchema.validate(formData, { abortEarly: false });
+      const updatedDocuments = await Promise.all(
+        formData.documents.map(async (doc) => {
+          const { fileType, fileName } = doc;
 
-      let payload = {
-        firstName : formData.firstName,
-        lastName : formData.lastName,
-        dob : formData.dob,
-        email : formData.email,
-        residentialAddress : {
-          street1 : formData.residentialAddress.street1,
-          street2 : formData.residentialAddress.street2,
-        },
-        permanentAddress : {
-          street1 : formData.permanentAddress.street1,
-          street2 : formData.permanentAddress.street2,
-        },
-        documents: formData.documents.map((document) => ({
-          fileName: document.fileName,
-          fileType: document.fileType,
-          file: document.file,
-        })),
-        isSameAsResidential : isSameAddress,
+          if (fileType === "image" || fileType === "pdf") {
+            const formDataObj = new FormData();
+            formDataObj.append("file", doc.file);
+            const endpoint =
+              fileType === "image"
+                ? "http://localhost:5000/auth/registerUserImage"
+                : "http://localhost:5000/auth/registerPDF";
+
+            const res = await axios.post(endpoint, formDataObj, {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            });
+
+            return {
+              id: doc.id,
+              fileName,
+              fileType,
+              filePath: res.data.filePath,
+            };
+          }
+
+          return doc;
+        })
+      );
+
+      const payload = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        dob: formData.dob,
+        email: formData.email,
+        residentialAddress: formData.residentialAddress,
+        permanentAddress: formData.permanentAddress,
+        documents: updatedDocuments,
+        isSameAsResidential: isSameAddress,
       };
-      console.log("payload : ", payload);
-      const response = await axios.post("http://localhost:5000/auth/register",payload)
-      console.log("response", response);
+
+      const {data, status} = await axios.post(
+        "http://localhost:5000/auth/register",
+        payload
+      );
+      console.log("response", data.message);
+      if (status == 200) {
+        toast.success(data.message);
+      }
     } catch (err) {
       const validationErrors = {};
-      err.inner.forEach((error) => {
-        validationErrors[error.path] = error.message;
+      err?.inner?.forEach((error) => {
+        validationErrors[error?.path] = error?.message;
       });
       setErrors(validationErrors);
-      console.error("Validation Errors", err.errors);
+      console.error("Validation Errors", err.response);
+      toast.error(err.response.data.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -419,7 +431,8 @@ const RegisterUser = () => {
                         .split(" ")
                         .slice(0, 4)
                         .join(" ") +
-                        (formData?.documents[0]?.file?.name?.split(" ")?.length > 5
+                        (formData?.documents[0]?.file?.name?.split(" ")
+                          ?.length > 5
                           ? "..."
                           : "")}
                   </div>
@@ -456,13 +469,17 @@ const RegisterUser = () => {
         ))}
 
         <div className="flex items-center justify-center mt-6">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none font-medium rounded-lg w-32 h-10"
-          >
-            Submit
-          </button>
+          {isLoading ? (
+            <CircularProgress />
+          ) : (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none font-medium rounded-lg w-32 h-10"
+            >
+              Submit
+            </button>
+          )}
         </div>
       </form>
     </>
