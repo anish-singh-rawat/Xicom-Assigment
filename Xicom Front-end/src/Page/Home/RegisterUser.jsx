@@ -95,8 +95,10 @@ const RegisterUser = () => {
           if (fileType === "image" || fileType === "pdf") {
             const formDataObj = new FormData();
             formDataObj.append("file", doc.file);
-            const endpoint = 
-            fileType === "image" ? "/auth/registerUserImage" : "/auth/registerPDF"
+            const endpoint =
+              fileType === "image"
+                ? "/auth/registerUserImage"
+                : "/auth/registerPDF";
 
             const res = await axiosInstance.post(endpoint, formDataObj, {
               headers: {
@@ -104,7 +106,7 @@ const RegisterUser = () => {
               },
             });
 
-            console.log("file respose : ",res)
+            console.log("file respose : ", res);
 
             return {
               id: doc.id,
@@ -128,10 +130,28 @@ const RegisterUser = () => {
         isSameAsResidential: isSameAddress,
       };
 
-      const {data, status} = await axios.post("http://localhost:5000/auth/register",payload);
+      const { data, status } = await axios.post(
+        "http://localhost:5000/auth/register",
+        payload
+      );
       console.log("response", data?.message);
       if (status == 200) {
         toast.success(data?.message);
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          dob: "",
+          residentialAddress: {
+            street1: "",
+            street2: "",
+          },
+          permanentAddress: {
+            street1: "",
+            street2: "",
+          },
+          documents: [{ id: Date.now(), fileName: "", fileType: "" }],
+        });
       }
     } catch (err) {
       const validationErrors = {};
@@ -422,7 +442,9 @@ const RegisterUser = () => {
                 <div className="border border-gray-300 gap-3 p-3 rounded-md w-full flex items-center">
                   <LuUpload className="ml-auto text-gray-500 h-4 w-4" />
                   <div className="truncate">
-                    {doc.file?.name ? formData?.documents[0]?.file?.name : null}
+                    {doc.file?.name
+                      ? formData?.documents[index]?.file?.name
+                      : null}
                   </div>
                 </div>
                 {errors[`documents[${index}].file`] && (
