@@ -70,7 +70,7 @@ export const registerUserImage = async (req, res) => {
         });
       }
       return res.status(200).send({
-        message: "PDF file uploaded successfully",
+        message: "Image uploaded successfully",
       });
     });
   } catch (error) {
